@@ -36,21 +36,54 @@ def upload_and_display_image(image_path):
     except Exception as e:
         print(f"Error: {e}")
 
-
 def upload_images_in_directory(directory):
-    # List all .jpg files and sort them alphabetically
-    files = sorted(
-        [filename for filename in os.listdir(
-            directory) if filename.lower().endswith(".jpg")]
-    )
+    # Connect to the TV
+    tv = SamsungTVWS(host=tvip)
+    art = tv.art()
 
-    # Loop through sorted filenames
-    for filename in files:
-        full_path = os.path.join(directory, filename)
+    # Get the list of existing images on the TV
+    existing_images = art.list()
+
+    # List all .jpg files in the directory
+    files = [filename for filename in os.listdir(directory) if filename.lower().endswith(".jpg")]
+
+    # Filter out images that are already on the TV
+    files_to_upload = [f for f in files if f not in existing_images]
+
+    # Upload all images that are not already on the TV
+    for image in files_to_upload:
+        full_path = os.path.join(directory, image)
         upload_and_display_image(full_path)
         # Sleep 2 seconds to let the Frame TV process the image
         time.sleep(2)
+def display_random_image():
+    try:
+        # Connect to the TV
+        tv = SamsungTVWS(host=tvip)
+        art = tv.art()
 
+        # Get the list of existing images on the TV
+        existing_images = art.list()
+
+        if not existing_images:
+            print("No images available on the TV.")
+            return
+
+        # Randomly select an image
+        selected_image = random.choice(existing_images)
+        print(f"Randomly selected image: {selected_image}")
+
+        # Display the selected image
+        art.select_image(selected_image)  # Pass the image ID to set it in Art Mode
+        tv.send_key("KEY_POWERON")  # Ensure the TV is ON
+        time.sleep(2)  # Give time for the TV to process
+
+        print("Art Mode activated with the randomly selected image.")
+        print(f"{time.ctime()}")
+    except Exception as e:
+        print(f"Error: {e}")
 
 # Call the function to upload and display images
 upload_images_in_directory(IMAGE_DIRECTORY)
+
+display_random_image()
