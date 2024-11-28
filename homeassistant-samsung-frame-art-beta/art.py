@@ -1,6 +1,11 @@
 import os
 import time
 from samsungtvws import SamsungTVWS
+import argparse
+
+args = parser.parse_args()
+
+
 
 IMAGE_DIRECTORY = "/media/frame"
 tvip = args.tvip
