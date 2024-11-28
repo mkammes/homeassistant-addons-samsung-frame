@@ -1,4 +1,4 @@
-name: "Test"
+name: "Test Beta Build"
 
 on: [push, pull_request]
 
@@ -15,5 +15,5 @@ jobs:
           args: |
             --test \
             --all \
-            --target homeassistant-samsung-frame-art \
+            --target homeassistant-samsung-frame-art-beta \
             --docker-hub gijsvdhoven
