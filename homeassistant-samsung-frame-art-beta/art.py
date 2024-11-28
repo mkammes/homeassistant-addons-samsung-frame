@@ -8,6 +8,11 @@ args = parser.parse_args()
 
 
 IMAGE_DIRECTORY = "/media/frame"
+
+
+parser = argparse.ArgumentParser(description='Upload images to Samsung TV.')
+parser.add_argument('--tvip', help='IP address of the Samsung the Frame')
+
 tvip = args.tvip
 
 def upload_and_display_image(image_path):
