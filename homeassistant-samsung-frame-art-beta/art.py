@@ -3,15 +3,12 @@ import time
 from samsungtvws import SamsungTVWS
 import argparse
 
-args = parser.parse_args()
-
-
-
-IMAGE_DIRECTORY = "/media/frame"
-
-
 parser = argparse.ArgumentParser(description='Upload images to Samsung TV.')
 parser.add_argument('--tvip', help='IP address of the Samsung the Frame')
+
+args = parser.parse_args()
+
+IMAGE_DIRECTORY = "/media/frame"
 
 tvip = args.tvip
 
