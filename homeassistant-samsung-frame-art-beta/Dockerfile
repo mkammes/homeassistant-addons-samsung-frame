@@ -5,8 +5,8 @@ RUN \
   apk add --no-cache \
     python3 py3-pip
 RUN \
-  git clone https://github.com/NickWaterton/samsung-tv-ws-api.git \
-  pip install "./samsung-tv-ws-api"
+  pip3 install git+https://github.com/NickWaterton/samsung-tv-ws-api.git
+
 # Copy data for add-on
 COPY run.sh /
 COPY art.py /
