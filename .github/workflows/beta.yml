@@ -1,4 +1,4 @@
-name: "Publish"
+name: "Publish beta"
 
 on:
   workflow_dispatch:
@@ -22,5 +22,5 @@ jobs:
         with:
           args: |
             --all \
-            --target /data/homeassistant-samsung-frame-art \
+            --target /data/homeassistant-samsung-frame-art-beta \
             --docker-hub gijsvdhoven
