@@ -5,8 +5,7 @@ RUN \
   apk add --no-cache \
     python3 git py3-pip
 RUN \
-  pip3 install Pillow \
-  pip3 install git+https://github.com/NickWaterton/samsung-tv-ws-api.git
+  pip3 install Pillow && pip3 install git+https://github.com/NickWaterton/samsung-tv-ws-api.git
 
 # Copy data for add-on
 COPY run.sh /
