@@ -34,7 +34,7 @@ def upload_and_display_image(image_path):
         # Assuming the response is the image ID directly
         image_id = response  # Directly use the string if it's the ID
         print("Activating Art Mode and displaying the uploaded image...")
-        art.select_image(image_id)  # Pass the image ID to set it in Art Mode
+        art.select_image(image_id, show=False)  # Pass the image ID to set it in Art Mode
         tv.send_key("KEY_POWERON")  # Ensure the TV is ON
         time.sleep(2)  # Give time for the TV to process
 
@@ -49,7 +49,8 @@ def upload_images_in_directory(directory):
     art = tv.art()
 
     # Get the list of existing images on the TV
-    existing_images = art.list()
+    existing_images = tv.art().available()
+    logging.info(info)
 
     # List all .jpg files in the directory
     files = [filename for filename in os.listdir(directory) if filename.lower().endswith(".jpg")]
@@ -94,3 +95,6 @@ def display_random_image():
 upload_images_in_directory(IMAGE_DIRECTORY)
 
 display_random_image()
+
+info = tv.art().get_photo_filter_list()
+logging.info(info)
