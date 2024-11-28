@@ -71,7 +71,7 @@ def display_random_image():
         art = tv.art()
 
         # Get the list of existing images on the TV
-        existing_images = art.list()
+        existing_images = tv.art().available()
 
         if not existing_images:
             print("No images available on the TV.")
