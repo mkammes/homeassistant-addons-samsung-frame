@@ -15,21 +15,21 @@ from samsungtvws import exceptions
 
 
 
-logging.basicConfig(level=logging.INFO) #or logging.DEBUG to see messages
+logging.basicConfig(level=logging.DEBUG) #or logging.DEBUG to see messages
 
 def parseargs():
     # Add command line argument parsing
     parser = argparse.ArgumentParser(description='Example async art Samsung Frame TV.')
     parser.add_argument('--ip', action="store", type=str, default=None, help='ip address of TV (default: %(default)s))')
-    parser.add_argument('--filter', action="store", type=str, default=None, help='photo filter to apply (default: %(default)s))')
-    parser.add_argument('--matte', action="store", type=str, default=None, help='matte to apply (default: %(default)s))')
+    parser.add_argument('--filter', action="store", type=str, default="none", help='photo filter to apply (default: %(default)s))')
+    parser.add_argument('--matte', action="store", type=str, default="none", help='matte to apply (default: %(default)s))')
     return parser.parse_args()
     
 
 
 # Set the path to the folder containing the images
 folder_path = '/media/frame'
-# folder_path = './frame'
+
 
 async def main():
     args = parseargs()
@@ -97,13 +97,6 @@ async def main():
                     await tv.delete_list([current_content_id])
                     logging.info('deleted from tv: {}'.format([current_content_id]))  
 
-                    await tv.get_matte_list(include_colour=True)
-                    logging.info('matte list: {}'.format(await tv.get_matte_list()))
-                      
-
-
-
-
 
             await asyncio.sleep(15)
 
@@ -117,36 +110,3 @@ async def main():
 
 
 asyncio.run(main())
-
-# if float(api_version) < 3.0:
-#     logging.info('old tv')
-# else:
-#     logging.info('new tv')
-
-# # Is art mode supported?
-# info = tv.art().supported()
-# logging.info(info)
-
-# if tv.art().supported():
-#     available_art = tv.art().available()
-#     logging.info("Available art: %s", available_art)
-
-# # List the art available on the device
-# info = tv.art().available()
-# logging.info(info)
-
-# # Retrieve information about the currently selected art
-# info = tv.art().get_current()
-# logging.info(info)
-
-# # Retrieve a thumbnail for a specific piece of art. Returns a JPEG.
-# thumbnail = tv.art().get_thumbnail('SAM-F0206')
-
-
-# # Determine whether the TV is currently in art mode
-# info = tv.art().get_artmode()
-# logging.info(info)
-
-# # List available photo filters
-# info = tv.art().get_photo_filter_list()
-# logging.info(info)
