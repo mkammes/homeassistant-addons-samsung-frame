@@ -92,7 +92,7 @@ async def main():
                     logging.info('uploaded {} to tv as {}'.format(filename, content_id))
                     await tv.set_photo_filter(content_id, args.filter)
 
-                    await tv.select_image(content_id, show=True)
+                    await tv.select_image(content_id, show=False)
                     logging.info('set artwork to {}'.format(content_id))
 
                
