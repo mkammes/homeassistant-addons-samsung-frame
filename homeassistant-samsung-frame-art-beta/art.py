@@ -15,7 +15,7 @@ from samsungtvws import exceptions
 
 
 
-logging.basicConfig(level=logging.DEBUG) #or logging.DEBUG to see messages
+logging.basicConfig(level=logging.INFO) #or logging.DEBUG to see messages
 
 def parseargs():
     # Add command line argument parsing
