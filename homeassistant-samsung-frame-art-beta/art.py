@@ -18,7 +18,8 @@ logging.basicConfig(level=logging.DEBUG) #or logging.DEBUG to see messages
 def parseargs():
     # Add command line argument parsing
     parser = argparse.ArgumentParser(description='Example async art Samsung Frame TV.')
-    parser.add_argument('ip', action="store", type=str, default=None, help='ip address of TV (default: %(default)s))')
+    parser.add_argument('--ip', action="store", type=str, default=None, help='ip address of TV (default: %(default)s))')
+    parser.add_argument('--filter', action="store", type=int, default=None, help='photo filter to apply (default: %(default)s))')
     return parser.parse_args()
     
 
@@ -71,6 +72,7 @@ async def main():
             if content_id:
                 await tv.select_image(content_id, show=False)
                 logging.info('set artwork to {}'.format(content_id))
+                tv.art().set_photo_filter(content_id, args.filter)
             #delete the file that was showing before
                 await tv.delete_list([current_content_id])
                 logging.info('deleted from tv: {}'.format([current_content_id]))    
