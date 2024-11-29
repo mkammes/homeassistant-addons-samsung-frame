@@ -19,5 +19,5 @@ options:
   filter: None
 schema:
   tv: "str?"
-  filter: list(None|Aqua|ArtDeco|Ink|Wash|Pastel|Feuve)
+  filter: "list(None|Aqua|ArtDeco|Ink|Wash|Pastel|Feuve)?"
 image: gijsvdhoven/{arch}-addon-homeassistant-samsung-frame-art-beta
