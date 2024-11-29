@@ -22,6 +22,6 @@ options:
 schema:
   tv: "str?"
   photo_filter: list(None|Aqua|ArtDeco|Ink|Wash|Pastel|Feuve)?
-  matte: List(none|myshelf|modernthin|modern|modernwide|flexible|shadowbox|panoramic|triptych|mix|squares)?
-  matte_color: List(black|neutral|antique|warm|polar|sand|seafoam|sage|burgandy|navy|apricot|byzantine|lavender|redorange|skyblue|turquoise)?
+  matte: list(none|myshelf|modernthin|modern|modernwide|flexible|shadowbox|panoramic|triptych|mix|squares)?
+  matte_color: list(black|neutral|antique|warm|polar|sand|seafoam|sage|burgandy|navy|apricot|byzantine|lavender|redorange|skyblue|turquoise)?
 image: gijsvdhoven/{arch}-addon-homeassistant-samsung-frame-art-beta

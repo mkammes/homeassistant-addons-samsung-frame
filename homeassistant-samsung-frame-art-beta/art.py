@@ -23,13 +23,17 @@ def parseargs():
     parser.add_argument('--ip', action="store", type=str, default=None, help='ip address of TV (default: %(default)s))')
     parser.add_argument('--filter', action="store", type=str, default="none", help='photo filter to apply (default: %(default)s))')
     parser.add_argument('--matte', action="store", type=str, default="none", help='matte to apply (default: %(default)s))')
+    parser.add_argument('--matte-color', action="store", type=str, default="black", help='matte color to apply (default: %(default)s))')
     return parser.parse_args()
     
+
 
 
 # Set the path to the folder containing the images
 folder_path = '/media/frame'
 
+# Set the matte and matte color
+matte_with_color = f"{args.matte}_{args.matte_color}" if args.matte != 'none' else args.matte
 
 async def main():
     args = parseargs()
@@ -84,7 +88,7 @@ async def main():
                     with open(filename, "rb") as f:
                         file_data = f.read()
                     file_type = os.path.splitext(filename)[1][1:] 
-                    content_id = await tv.upload(file_data, file_type=file_type, matte=args.matte) 
+                    content_id = await tv.upload(file_data, file_type=file_type, matte=matte_with_color) 
                     logging.info('uploaded {} to tv as {}'.format(filename, content_id))
                     await tv.set_photo_filter(content_id, args.filter)
 
