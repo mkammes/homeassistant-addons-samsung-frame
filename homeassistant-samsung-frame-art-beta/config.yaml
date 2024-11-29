@@ -17,7 +17,7 @@ map:
 options:
   tv: "192.168.1.1"
   photo_filter: None
-  matte: None
+  matte: none
   matte_color: black
 schema:
   tv: "str?"

@@ -32,8 +32,17 @@ def parseargs():
 # Set the path to the folder containing the images
 folder_path = '/media/frame'
 
+matte = args.matte
+matte_color = args.matte_color
+
 # Set the matte and matte color
-matte_with_color = f"{args.matte}_{args.matte_color}" if args.matte != 'none' else args.matte
+
+if matte != 'none':
+    matte_var = f"{matte}_{matte_color}"
+else:
+    matte_var = matte
+
+
 
 async def main():
     args = parseargs()
@@ -88,7 +97,7 @@ async def main():
                     with open(filename, "rb") as f:
                         file_data = f.read()
                     file_type = os.path.splitext(filename)[1][1:] 
-                    content_id = await tv.upload(file_data, file_type=file_type, matte=matte_with_color) 
+                    content_id = await tv.upload(file_data, file_type=file_type, matte=matte_var) 
                     logging.info('uploaded {} to tv as {}'.format(filename, content_id))
                     await tv.set_photo_filter(content_id, args.filter)
 
