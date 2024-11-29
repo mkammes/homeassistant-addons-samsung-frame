@@ -5,6 +5,9 @@ import os
 import asyncio
 import logging
 import argparse
+from PIL import Image
+
+from resizeimage import resizeimage
 
 sys.path.append('../')
 
@@ -57,27 +60,44 @@ async def main():
             logging.info('current artwork: {}'.format(info))
             current_content_id = info['content_id']
 
-            filename = random.choice([f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))])
-            filename = os.path.join(folder_path, filename)
-            content_id = None
-            if filename:
-                with open(filename, "rb") as f:
-                    file_data = f.read()
-                file_type = os.path.splitext(filename)[1][1:] 
-                content_id = await tv.upload(file_data, file_type=file_type)
-                content_id = os.path.splitext(content_id)[0]    #remove file extension if any (eg .jpg)
-                logging.info('uploaded {} to tv as {}'.format(filename, content_id))
-
-            #set artwork
-            if content_id:
-                await tv.select_image(content_id, show=False)
-                logging.info('set artwork to {}'.format(content_id))
-                tv.art().set_photo_filter(content_id, args.filter)
-            #delete the file that was showing before
-                await tv.delete_list([current_content_id])
-                logging.info('deleted from tv: {}'.format([current_content_id]))    
+            # Select a photo from the folder
+            photos = [f for f in os.listdir(folder_path) if f.lower().endswith(('.png', '.jpg'))]
+            if not photos:
+                logging.info('No PNG or JPG photos found in the folder')
+                return
             else:
-                logging.info('no artwork to set') 
+                filename = random.choice(photos)
+                filename = os.path.join(folder_path, filename)
+                new_filename = os.path.join(folder_path, os.path.basename(filename).lower())
+                os.rename(filename, new_filename)
+                filename = new_filename
+                logging.info('Selected and renamed photo: {}'.format(filename))
+
+                #resize image
+                with open(filename, 'r+b') as f:
+                    with Image.open(f) as image:
+                        cover = resizeimage.resize_cover(image, [3840, 2160])
+                        cover.save(filename, image.format)
+                        logging.info('resized {}'.format(filename))
+
+                content_id = None
+                if filename:
+                    with open(filename, "rb") as f:
+                        file_data = f.read()
+                    file_type = os.path.splitext(filename)[1][1:] 
+                    content_id = await tv.upload(file_data, file_type=file_type)
+                    content_id = os.path.splitext(content_id)[0]    #remove file extension if any (eg .jpg)
+                    logging.info('uploaded {} to tv as {}'.format(filename, content_id))
+
+                #set artwork
+                if content_id:
+                    await tv.select_image(content_id, show=False)
+                    logging.info('set artwork to {}'.format(content_id))
+                    tv.art().set_photo_filter(content_id, args.filter)
+                #delete the file that was showing before
+                    await tv.delete_list([current_content_id])
+                    logging.info('deleted from tv: {}'.format([current_content_id]))    
+
 
 
 
