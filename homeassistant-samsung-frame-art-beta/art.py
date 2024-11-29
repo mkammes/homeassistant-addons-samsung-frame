@@ -5,7 +5,7 @@ import os
 import asyncio
 import logging
 import argparse
-from PIL import Image
+from PIL import Image, ImageOps
 
 
 sys.path.append('../')
