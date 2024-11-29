@@ -1,54 +1,102 @@
 import sys
-import logging
-import os
 import random
 import json
+import os
+import asyncio
+import logging
 import argparse
-
 
 sys.path.append('../')
 
-from samsungtvws import SamsungTVWS
+from samsungtvws.async_art import SamsungTVAsyncArt
+from samsungtvws import exceptions
 
 
-# Add command line argument parsing
-parser = argparse.ArgumentParser(description='Upload images to Samsung TV.')
-parser.add_argument('--ip', help='IP address of the Samsung the Frame')
-args = parser.parse_args()
 
-# Parse the command line arguments
-ip = args.ip
+logging.basicConfig(level=logging.DEBUG) #or logging.DEBUG to see messages
+
+def parseargs():
+    # Add command line argument parsing
+    parser = argparse.ArgumentParser(description='Example async art Samsung Frame TV.')
+    parser.add_argument('ip', action="store", type=str, default=None, help='ip address of TV (default: %(default)s))')
+    return parser.parse_args()
+    
+
 
 # Set the path to the folder containing the images
 folder_path = '/media/frame'
 
-# Set the path to the file that will store the list of uploaded filenames
-upload_list_path = '/data/uploaded_files.json'
 
-# Load the list of uploaded filenames from the file
-if os.path.isfile(upload_list_path):
-		with open(upload_list_path, 'r') as f:
-				uploaded_files = json.load(f)
-else:
-		uploaded_files = []
+async def main():
+    args = parseargs()
+    tv = SamsungTVAsyncArt(host=args.ip, port=8002)
+    await tv.start_listening()
+    
+
+    supported = await tv.supported()
+    if supported:
+        logging.info('This TV is supported')
+
+    else:
+        logging.info('This TV is not supported')
+   
+    if supported:
+        try:
+            #is tv on (calls tv rest api)
+            tv_on = await tv.on()
+            logging.info('tv is on: {}'.format(tv_on))
+            
+            #is art mode on
+            #art_mode = await tv.get_artmode()                  #calls websocket command to determine status
+            art_mode = tv.art_mode                              #passive, listens for websocket messgages to determine art mode status
+            logging.info('art mode is on: {}'.format(art_mode))
+
+            #get current artwork
+            info = await tv.get_current()
+            logging.info('current artwork: {}'.format(info))
+            current_content_id = info['content_id']
+
+            filename = random.choice([f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))])
+            filename = os.path.join(folder_path, filename)
+            content_id = None
+            if filename:
+                with open(filename, "rb") as f:
+                    file_data = f.read()
+                file_type = os.path.splitext(filename)[1][1:] 
+                content_id = await tv.upload(file_data, file_type=file_type)
+                content_id = os.path.splitext(content_id)[0]    #remove file extension if any (eg .jpg)
+                logging.info('uploaded {} to tv as {}'.format(filename, content_id))
+
+            #set artwork
+            if content_id:
+                await tv.select_image(content_id, show=False)
+                logging.info('set artwork to {}'.format(content_id))
+            #delete the file that was showing before
+                await tv.delete_list([current_content_id])
+                logging.info('deleted from tv: {}'.format([current_content_id]))    
+            else:
+                logging.info('no artwork to set') 
 
 
 
-# Increase debug level
-logging.basicConfig(level=logging.INFO)
 
-# Normal constructor
-token_file = os.path.dirname(os.path.realpath(__file__)) + '/tv-token.txt'
-tv = SamsungTVWS(host=ip, port=8002, token_file=token_file)
+            await asyncio.sleep(15)
+
+        except exceptions.ResponseError as e:
+            logging.warning('ERROR: {}'.format(e))
+        except AssertionError as e:
+            logging.warning('no data received: {}'.format(e))
+
+        
+    await tv.close()
 
 
-api_version = tv.get_api_version()
-logging.info('api version: {}'.format(api_version))
+asyncio.run(main())
 
-if float(api_version) < 3.0:
-    logging.info('old tv')
-else:
-    logging.info('new tv')
+# if float(api_version) < 3.0:
+#     logging.info('old tv')
+# else:
+#     logging.info('new tv')
 
 # # Is art mode supported?
 # info = tv.art().supported()
