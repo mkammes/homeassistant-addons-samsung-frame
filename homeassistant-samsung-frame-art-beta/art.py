@@ -38,11 +38,18 @@ else:
 logging.basicConfig(level=logging.INFO)
 
 # Normal constructor
-tv = SamsungTVWS(ip)
+token_file = os.path.dirname(os.path.realpath(__file__)) + '/tv-token.txt'
+tv = SamsungTVWS(host=ip, port=8002, token_file=token_file)
 
 
 api_version = tv.get_api_version()
 logging.info('api version: {}'.format(api_version))
+
+if float(api_version) < 3.0:
+    logging.info('old tv')
+else:
+    logging.info('new tv')
+
 # # Is art mode supported?
 # info = tv.art().supported()
 # logging.info(info)
