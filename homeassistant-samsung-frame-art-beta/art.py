@@ -32,20 +32,23 @@ def parseargs():
 # Set the path to the folder containing the images
 folder_path = '/media/frame'
 
-matte = args.matte
-matte_color = args.matte_color
-
-# Set the matte and matte color
-
-if matte != 'none':
-    matte_var = f"{matte}_{matte_color}"
-else:
-    matte_var = matte
-
-
 
 async def main():
     args = parseargs()
+
+
+    matte = args.matte
+    matte_color = args.matte_color
+
+    # Set the matte and matte color
+
+    if matte != 'none':
+        matte_var = f"{matte}_{matte_color}"
+    else:
+        matte_var = matte
+
+
+
     tv = SamsungTVAsyncArt(host=args.ip, port=8002)
     await tv.start_listening()
     
