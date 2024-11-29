@@ -113,6 +113,7 @@ async def main():
 
 
                 image = Image.open(filename)
+                image = ImageOps.exif_transpose(image)
                 new_image = image.resize((3840, 2160))
                 new_image.save(filename)
 
