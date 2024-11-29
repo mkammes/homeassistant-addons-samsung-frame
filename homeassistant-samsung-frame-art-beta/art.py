@@ -7,7 +7,6 @@ import logging
 import argparse
 from PIL import Image
 
-from resizeimage import resizeimage
 
 sys.path.append('../')
 
@@ -16,20 +15,21 @@ from samsungtvws import exceptions
 
 
 
-logging.basicConfig(level=logging.DEBUG) #or logging.DEBUG to see messages
+logging.basicConfig(level=logging.INFO) #or logging.DEBUG to see messages
 
 def parseargs():
     # Add command line argument parsing
     parser = argparse.ArgumentParser(description='Example async art Samsung Frame TV.')
     parser.add_argument('--ip', action="store", type=str, default=None, help='ip address of TV (default: %(default)s))')
     parser.add_argument('--filter', action="store", type=str, default=None, help='photo filter to apply (default: %(default)s))')
+    parser.add_argument('--matte', action="store", type=str, default=None, help='matte to apply (default: %(default)s))')
     return parser.parse_args()
     
 
 
 # Set the path to the folder containing the images
 folder_path = '/media/frame'
-
+# folder_path = './frame'
 
 async def main():
     args = parseargs()
@@ -57,10 +57,9 @@ async def main():
 
             #get current artwork
             info = await tv.get_current()
-            logging.info('current artwork: {}'.format(info))
+            # logging.info('current artwork: {}'.format(info))
             current_content_id = info['content_id']
 
-            # Select a photo from the folder
             photos = [f for f in os.listdir(folder_path) if f.lower().endswith(('.png', '.jpg'))]
             if not photos:
                 logging.info('No PNG or JPG photos found in the folder')
@@ -73,30 +72,34 @@ async def main():
                 filename = new_filename
                 logging.info('Selected and renamed photo: {}'.format(filename))
 
-                #resize image
-                with open(filename, 'r+b') as f:
-                    with Image.open(f) as image:
-                        cover = resizeimage.resize_cover(image, [3840, 2160])
-                        cover.save(filename, image.format)
-                        logging.info('resized {}'.format(filename))
+
+                image = Image.open(filename)
+                new_image = image.resize((3840, 2160))
+                new_image.save(filename)
+
+
 
                 content_id = None
                 if filename:
                     with open(filename, "rb") as f:
                         file_data = f.read()
                     file_type = os.path.splitext(filename)[1][1:] 
-                    content_id = await tv.upload(file_data, file_type=file_type)
-                    content_id = os.path.splitext(content_id)[0]    #remove file extension if any (eg .jpg)
+                    content_id = await tv.upload(file_data, file_type=file_type, matte=args.matte) 
                     logging.info('uploaded {} to tv as {}'.format(filename, content_id))
+                    await tv.set_photo_filter(content_id, args.filter)
 
-                #set artwork
-                if content_id:
-                    await tv.select_image(content_id, show=False)
+                    await tv.select_image(content_id, show=True)
                     logging.info('set artwork to {}'.format(content_id))
-                    tv.art().set_photo_filter(content_id, args.filter)
-                #delete the file that was showing before
+
+               
+                    #delete the file that was showing before
+                    
                     await tv.delete_list([current_content_id])
-                    logging.info('deleted from tv: {}'.format([current_content_id]))    
+                    logging.info('deleted from tv: {}'.format([current_content_id]))  
+
+                    await tv.get_matte_list(include_colour=True)
+                    logging.info('matte list: {}'.format(await tv.get_matte_list()))
+                      
 
 
 

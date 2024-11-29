@@ -16,8 +16,10 @@ map:
   - "media:rw"
 options:
   tv: "192.168.1.1"
-  filter: None
+  photo_filter: None
+  matte: None
 schema:
   tv: "str?"
-  filter: "list(None|Aqua|ArtDeco|Ink|Wash|Pastel|Feuve)?"
+  photo_filter: list(None|Aqua|ArtDeco|Ink|Wash|Pastel|Feuve)?
+  matte: List(none|myshelf|modernthin|modern|modernwide|flexible|shadowbox|panoramic|triptych|mix|squares)?
 image: gijsvdhoven/{arch}-addon-homeassistant-samsung-frame-art-beta
