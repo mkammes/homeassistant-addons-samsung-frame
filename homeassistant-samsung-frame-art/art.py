@@ -1,115 +1,160 @@
 import sys
-import logging
-import os
 import random
 import json
+import os
+import asyncio
+import logging
 import argparse
+from PIL import Image, ImageOps
+
 
 sys.path.append('../')
 
-from samsungtvws import SamsungTVWS
+from samsungtvws.async_art import SamsungTVAsyncArt
+from samsungtvws import exceptions
 
-# Add command line argument parsing
-parser = argparse.ArgumentParser(description='Upload images to Samsung TV.')
-parser.add_argument('--upload-all', action='store_true', help='Upload all images at once')
-parser.add_argument('--debug', action='store_true', help='Enable debug mode to check if TV is reachable')
-parser.add_argument('--tvip', help='IP address of the Samsung the Frame')
 
-args = parser.parse_args()
+
+logging.basicConfig(level=logging.INFO) #or logging.DEBUG to see messages
+
+def parseargs():
+    # Add command line argument parsing
+    parser = argparse.ArgumentParser(description='Example async art Samsung Frame TV.')
+    parser.add_argument('--ip', action="store", type=str, default=None, help='ip address of TV (default: %(default)s))')
+    parser.add_argument('--filter', action="store", type=str, default="none", help='photo filter to apply (default: %(default)s))')
+    parser.add_argument('--matte', action="store", type=str, default="none", help='matte to apply (default: %(default)s))')
+    parser.add_argument('--matte-color', action="store", type=str, default="black", help='matte color to apply (default: %(default)s))')
+    return parser.parse_args()
+    
+
+
 
 # Set the path to the folder containing the images
 folder_path = '/media/frame'
 
-# Set the path to the file that will store the list of uploaded filenames
-upload_list_path = '/data/uploaded_files.json'
+uploaded_json_path = '/data/uploaded.json'
 
-# Load the list of uploaded filenames from the file
-if os.path.isfile(upload_list_path):
-		with open(upload_list_path, 'r') as f:
-				uploaded_files = json.load(f)
+
+# Load the list of last 5 uploaded pictures
+if os.path.exists(uploaded_json_path):
+    with open(uploaded_json_path, 'r') as file:
+        uploaded_photos = json.load(file)
 else:
-		uploaded_files = []
+    uploaded_photos = []
 
-# Increase debug level
-logging.basicConfig(level=logging.INFO)
+# Get the list of all photos in the folder
+files = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
 
-tvip = args.tvip
-# Set your TVs local IP address. Highly recommend using a static IP address for your TV.
-# tv = SamsungTVWS('192.168.1.199')
-tv = SamsungTVWS(tvip)
-# Check if TV is reachable in debug mode
-if args.debug:
-		try:
-				logging.info('Checking if the TV can be reached.')
-				info = tv.rest_device_info()
-				logging.info('If you do not see an error, your TV could be reached.')
-				sys.exit()
-		except Exception as e:
-				logging.error('Could not reach the TV: ' + str(e))
-				sys.exit()
+if len(files) > 5:
+    # Exclude the photos on the uploaded list
+    available_files = [f for f in files if f not in uploaded_photos]
 
-# Checks if the TV supports art mode
-art_mode = tv.art().supported()
-
-if art_mode == True:
-		# Retrieve information about the currently selected art
-		current_art = tv.art().get_current()
-
-		# Get a list of JPG/PNG files in the folder, and searches recursively if you want to use subdirectories
-		files = [os.path.join(root, f) for root, dirs, files in os.walk(folder_path) for f in files if f.endswith('.jpg') or f.endswith('.png')]
-
-		if args.upload_all:
-				logging.info('Bulk uploading all photos. This may take a while...')
-
-				# Remove the filenames of images that have already been uploaded
-				files = list(set(files) - set([f['file'] for f in uploaded_files]))
-				files_to_upload = files
-		else:
-				if len(files) == 0:
-						logging.info('No new images to upload.')
-				else:
-						logging.info('Choosing random image.')
-						files_to_upload = [random.choice(files)]
-
-		for file in files_to_upload:
-				# Read the contents of the file
-				with open(file, 'rb') as f:
-						data = f.read()
-
-				# Upload the file to the TV and select it as the current art, or select it using the remote filename if it has already been uploaded
-				remote_filename = None
-				for uploaded_file in uploaded_files:
-						if uploaded_file['file'] == file:
-								remote_filename = uploaded_file['remote_filename']
-								logging.info('Image already uploaded.')
-								break
-				if remote_filename is None:
-						logging.info('Uploading new image: ' + str(file))
-
-						try:
-							if file.endswith('.jpg'):
-									remote_filename = tv.art().upload(data, file_type='JPEG', matte="none")
-							elif file.endswith('.png'):
-									remote_filename = tv.art().upload(data, file_type='PNG', matte="none")
-						except Exception as e:
-							logging.error('There was an error: ' + str(e))
-							sys.exit()
-							
-						# Add the filename to the list of uploaded filenames
-						uploaded_files.append({'file': file, 'remote_filename': remote_filename})
-
-						if not args.upload_all:
-							# Select the uploaded image using the remote file name
-							tv.art().select_image(remote_filename, show=False)
-
-				else:
-						if not args.upload_all:
-								# Select the image using the remote file name only if not in 'upload-all' mode
-								logging.info('Setting existing image, skipping upload')
-								tv.art().select_image(remote_filename, show=True)
-
-				# Save the list of uploaded filenames to the file
-				with open(upload_list_path, 'w') as f:
-						json.dump(uploaded_files, f)
+    # Select a random photo from the available files
+    selected_photo = random.choice(available_files)
 else:
-		logging.warning('Your TV does not support art mode.')
+    selected_photo = random.choice(files)
+
+
+
+async def main():
+    args = parseargs()
+
+
+    matte = args.matte
+    matte_color = args.matte_color
+
+    # Set the matte and matte color
+
+    if matte != 'none':
+        matte_var = f"{matte}_{matte_color}"
+    else:
+        matte_var = matte
+
+
+
+    tv = SamsungTVAsyncArt(host=args.ip, port=8002)
+    await tv.start_listening()
+    
+
+    supported = await tv.supported()
+    if supported:
+        logging.info('This TV is supported')
+
+    else:
+        logging.info('This TV is not supported')
+   
+    if supported:
+        try:
+            #is tv on (calls tv rest api)
+            tv_on = await tv.on()
+            logging.info('tv is on: {}'.format(tv_on))
+            
+            #is art mode on
+            #art_mode = await tv.get_artmode()                  #calls websocket command to determine status
+            art_mode = tv.art_mode                              #passive, listens for websocket messgages to determine art mode status
+            logging.info('art mode is on: {}'.format(art_mode))
+
+            #get current artwork
+            info = await tv.get_current()
+            # logging.info('current artwork: {}'.format(info))
+            current_content_id = info['content_id']
+
+            photos = [f for f in os.listdir(folder_path) if f.lower().endswith(('.png', '.jpg'))]
+            if not photos:
+                logging.info('No PNG or JPG photos found in the folder')
+                return
+            else:
+                filename = selected_photo
+                filename = os.path.join(folder_path, filename)
+                new_filename = os.path.join(folder_path, os.path.basename(filename).lower())
+                os.rename(filename, new_filename)
+                filename = new_filename
+                logging.info('Selected and renamed photo: {}'.format(filename))
+
+
+                image = Image.open(filename)
+                image = ImageOps.exif_transpose(image)
+                new_image = image.resize((3840, 2160))
+                new_image.save(filename)
+
+
+
+                content_id = None
+                if filename:
+                    with open(filename, "rb") as f:
+                        file_data = f.read()
+                    file_type = os.path.splitext(filename)[1][1:] 
+                    content_id = await tv.upload(file_data, file_type=file_type, matte=matte_var) 
+                    logging.info('uploaded {} to tv as {}'.format(filename, content_id))
+                    await tv.set_photo_filter(content_id, args.filter)
+
+                    await tv.select_image(content_id, show=False)
+                    logging.info('set artwork to {}'.format(content_id))
+
+               
+                    #delete the file that was showing before
+                    
+                    await tv.delete_list([current_content_id])
+                    logging.info('deleted from tv: {}'.format([current_content_id]))  
+
+                    uploaded_photos.append(selected_photo)
+                    if len(uploaded_photos) > 5:
+                        uploaded_photos.pop(0)
+                    
+                    with open(uploaded_json_path, 'w') as file:
+                        json.dump(uploaded_photos, file)
+
+
+
+            await asyncio.sleep(15)
+
+        except exceptions.ResponseError as e:
+            logging.warning('ERROR: {}'.format(e))
+        except AssertionError as e:
+            logging.warning('no data received: {}'.format(e))
+
+        
+    await tv.close()
+
+
+asyncio.run(main())
