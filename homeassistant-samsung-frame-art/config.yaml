@@ -9,8 +9,11 @@ arch:
   - aarch64
   - amd64
   - i386
+init: false
 startup: application
 boot: auto
+map:
+  - "media:rw"
 options:
   tv_ip: "192.168.1.107"
   image_folder: "/media/frame"
