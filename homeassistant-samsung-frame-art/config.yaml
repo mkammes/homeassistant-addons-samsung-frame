@@ -1,8 +1,8 @@
-name: "Samsung Frame Art"
+name: "Samsung Frame Art Picture Push"
 version: "1.0.0"
 slug: "samsung_frame_art"
 description: "Display images on Samsung Frame TV"
-url: "https://github.com/mkammes/homeassistant-addons-samsung-frame"
+url: "git@github.com:mkammes/homeassistant-addons-samsung-frame.git"
 arch:
   - armhf
   - armv7
