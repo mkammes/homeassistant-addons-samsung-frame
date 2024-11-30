@@ -1,17 +1,28 @@
 ARG BUILD_FROM
 FROM $BUILD_FROM
 
+# Install required packages
 RUN \
   apk add --no-cache \
-    python3 git py3-pip
-RUN \
-  pip3 install Pillow && pip3 install python-resize-image && pip3 install aiohttp && pip3 install websockets && pip3 install git+https://github.com/NickWaterton/samsung-tv-ws-api.git
+  python3 \
+  py3-pip \
+  git
 
-# Copy data for add-on
+# Install Python dependencies
+RUN pip3 install --no-cache-dir \
+  Pillow \
+  python-resize-image \
+  aiohttp \
+  websockets \
+  git+https://github.com/NickWaterton/samsung-tv-ws-api.git
+
+# Copy your scripts
+COPY run.py /
 COPY run.sh /
-COPY art.py /
 
-
+# Make scripts executable
 RUN chmod a+x /run.sh
 
+# Set proper S6 entrypoint
+ENTRYPOINT ["/init"]
 CMD [ "/run.sh" ]
